@@ -7,7 +7,13 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 8888;
 
 // middleware
-app.use(cors());
+// app.use(cors());
+const corsConfig = {
+  origin: true,
+  credentials: true,
+};
+app.use(cors(corsConfig));
+app.options('*', cors(corsConfig));
 app.use(express.json());
 
 
@@ -22,6 +28,15 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+
+// client.connect((err) => {
+//   const collection = client.db('test').collection('devices');
+//   console.log('mongo is running');
+//   // perform actions on the collection object
+//   client.close();
+// });
+
+
 // console.log(uri);
 //Funtion for api call
 async function run() {
