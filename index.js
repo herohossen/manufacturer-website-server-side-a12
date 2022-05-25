@@ -72,7 +72,14 @@ async function run() {
 
     //Tools Section Start
 
- 
+    app.get("/tools", async (req, res) => {
+      const query = {};
+      const cursor = toolsCollection.find(query);
+      const tools = await cursor.toArray();
+      res.send(tools);
+    });
+
+
 
     // post oreder data
     app.post("/tools", async (req, res) => {
