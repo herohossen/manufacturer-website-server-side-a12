@@ -43,9 +43,47 @@ async function run() {
   try {
     await client.connect();
     //database name and colletion
-    const itemCollection = client
+    const toolsCollection = client
       .db("inventory-management-p11")
-      .collection("products");
+      .collection("tools");
+
+    //User data
+    const userCollection = client
+      .db("inventory-management-p11")
+      .collection("users");
+
+    //User data
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      const token = jwt.sign(
+        { email: email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "2h" }
+      );
+      res.send({ result, token });
+    });
+
+    //Tools Section Start
+
+ 
+
+    // post oreder data
+    app.post("/tools", async (req, res) => {
+      const newTools = req.body;
+      console.log("adding new Tools", newTools);
+      const result = await toolsCollection.insertOne(newTools);
+      console.log("Add New Tools Result", result);
+      res.send(result);
+    });
+
+    //Tools Section End
 
     //get item
     app.get("/item", async (req, res) => {
