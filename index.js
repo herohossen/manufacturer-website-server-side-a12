@@ -107,10 +107,13 @@ async function run() {
       // get order data
       // change
       app.get("/order", async (req, res) => {
-        const query = {};
-        const cursor = ordersCollection.find(query);
-        const orders = await cursor.toArray();
+        const email =req.query.email;
+        const query = {email: email};
+        // const cursor = ordersCollection.find(query);
+        // const orders = await cursor.toArray();
+        const orders = await ordersCollection.find(query).toArray();
         res.send(orders);
+        console.log(orders);
       });
 
       // app.get("/order/:id", async (req, res) => {
