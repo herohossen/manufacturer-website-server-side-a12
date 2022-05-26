@@ -113,16 +113,20 @@ async function run() {
     //   console.log("Add New Tools Result", result);
     //   res.send(result);
     // });
+    //
+    app.get("/user", verifyJWT, async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
 
     // orders sections start
 
-    app.get("/order", async (req, res) => {
-      const query = {};
-      const cursor = ordersCollection.find(query);
-      const allorders = await cursor.toArray();
-      res.send(allorders);
-    });
-
+    // app.get("/order", async (req, res) => {
+    //   const query = {};
+    //   const cursor = ordersCollection.find(query);
+    //   const allorders = await cursor.toArray();
+    //   res.send(allorders);
+    // });
 
     app.get("/order", verifyJWT, async (req, res) => {
       const email = req.query.email;
@@ -140,8 +144,6 @@ async function run() {
       } else {
       }
     });
-
-
 
     // post order data
     app.post("/order", async (req, res) => {
