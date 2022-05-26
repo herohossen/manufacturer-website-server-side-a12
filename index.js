@@ -70,8 +70,96 @@ async function run() {
     const ordersCollection = client
       .db("inventory-management-p11")
       .collection("orders");
-    //User data
-    app.put("/user/:email", async (req, res) => {
+
+
+      const verifyAdmin = async (req, res, next) => {
+        const requester = req.decoded.email;
+        const requesterAccount = await userCollection.findOne({
+          email: requester,
+        });
+        if (requesterAccount.role === "admin") {
+          next();
+        } else {
+          res.status(403).send({ message: "forbidden" });
+        }
+      };
+
+      //User data
+      app.put("/user/:email", async (req, res) => {
+        const email = req.params.email;
+        const user = req.body;
+        const filter = { email: email };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: user,
+        };
+        const result = await userCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        const token = jwt.sign(
+          { email: email },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "2h" }
+        );
+        res.send({ result, token });
+      });
+
+      //Tools Section Start
+
+      app.get("/tools", async (req, res) => {
+        const query = {};
+        const cursor = toolsCollection.find(query);
+        const tools = await cursor.toArray();
+        res.send(tools);
+      });
+
+      //Tools By Id
+      app.get("/tools/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const tool = await toolsCollection.findOne(query);
+        res.send(tool);
+      });
+
+      // // post oreder data
+      // app.post("/tools", async (req, res) => {
+      //   const newTools = req.body;
+      //   console.log("adding new Tools", newTools);
+      //   const result = await toolsCollection.insertOne(newTools);
+      //   console.log("Add New Tools Result", result);
+      //   res.send(result);
+      // });
+      //
+      app.get("/user", verifyJWT, async (req, res) => {
+        const users = await userCollection.find().toArray();
+        res.send(users);
+      });
+
+      app.get("/admin/:email", async (req, res) => {
+        const email = req.params.email;
+        const user = await userCollection.findOne({ email: email });
+        const isAdmin = user.role === "admin";
+        res.send({ admin: isAdmin });
+      });
+
+      app.put(
+        "/user/admin/:email",
+        verifyJWT,
+        verifyAdmin,
+        async (req, res) => {
+          const email = req.params.email;
+          const filter = { email: email };
+          const updateDoc = {
+            $set: { role: "admin" },
+          };
+          const result = await userCollection.updateOne(filter, updateDoc);
+          res.send(result);
+        }
+      );
+
+    app.put('/user/:email', async (req, res) => {
       const email = req.params.email;
       const user = req.body;
       const filter = { email: email };
@@ -80,44 +168,11 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      const token = jwt.sign(
-        { email: email },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "2h" }
-      );
+      const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
       res.send({ result, token });
     });
 
-    //Tools Section Start
 
-    app.get("/tools", async (req, res) => {
-      const query = {};
-      const cursor = toolsCollection.find(query);
-      const tools = await cursor.toArray();
-      res.send(tools);
-    });
-
-    //Tools By Id
-    app.get("/tools/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const tool = await toolsCollection.findOne(query);
-      res.send(tool);
-    });
-
-    // // post oreder data
-    // app.post("/tools", async (req, res) => {
-    //   const newTools = req.body;
-    //   console.log("adding new Tools", newTools);
-    //   const result = await toolsCollection.insertOne(newTools);
-    //   console.log("Add New Tools Result", result);
-    //   res.send(result);
-    // });
-    //
-    app.get("/user", verifyJWT, async (req, res) => {
-      const users = await userCollection.find().toArray();
-      res.send(users);
-    });
 
     // orders sections start
 
