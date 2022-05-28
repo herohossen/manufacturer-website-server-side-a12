@@ -71,6 +71,11 @@ async function run() {
       .db("inventory-management-p11")
       .collection("orders");
 
+      const userInfoUpdateCollection = client
+      .db('inventory-management-p11')
+      .collection('userInfoUpdate');
+
+      const reviewsCollection = client.db('inventory-management-p11').collection('reviews');
 
       const verifyAdmin = async (req, res, next) => {
         const requester = req.decoded.email;
@@ -173,16 +178,6 @@ async function run() {
     });
 
 
-
-    // orders sections start
-
-    // app.get("/order", async (req, res) => {
-    //   const query = {};
-    //   const cursor = ordersCollection.find(query);
-    //   const allorders = await cursor.toArray();
-    //   res.send(allorders);
-    // });
-
     app.get("/order", verifyJWT, async (req, res) => {
       const email = req.query.email;
       // const authorization = req.headers.authorization;
@@ -200,6 +195,14 @@ async function run() {
       }
     });
 
+
+app.get("/order/:id",verifyJWT,async(req,res)=>{
+const id = req.params.id
+const query = { _id: ObjectId(id)};
+const order =await ordersCollection.findOne(query);
+res.send(order);
+})
+
     // post order data
     app.post("/order", async (req, res) => {
       const newOrder = req.body;
@@ -208,6 +211,54 @@ async function run() {
       console.log("Add New order Result", result);
       res.send(result);
     });
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+// user info update section start
+    // change
+
+    app.get('/userinfo', async (req, res) => {
+      const query = {};
+      console.log('user info query', query);
+      const cursor = userInfoUpdateCollection.find(query);
+      const userInfo = await cursor.toArray();
+      console.log('user info reviews', userInfo);
+      res.send(userInfo);
+    });
+
+    app.post('/userinfo', async (req, res) => {
+      const userInfoUpdate = req.body;
+      console.log('adding user Info Update', userInfoUpdate);
+      const result = await userInfoUpdateCollection.insertOne(userInfoUpdate);
+      console.log('user Info Update Result', result);
+      res.send(result);
+    });
+    // user info update section end
+// users reviews sections start
+    // all reviews
+    app.get('/reviews', async (req, res) => {
+      const query = {};
+      // console.log('query', query);
+      const cursor = reviewsCollection.find(query);
+      const reviews = await cursor.toArray();
+      // console.log('reviews', reviews);
+      res.send(reviews);
+    });
+    // post review data
+    app.post('/reviews', async (req, res) => {
+      const newReview = req.body;
+      console.log('adding new review', newReview);
+      const result = await reviewsCollection.insertOne(newReview);
+      console.log('Add New review Result', result);
+      res.send(result);
+    });
+    // users reviews sections end
+
+
   } finally {
     // await client.close();
   }
@@ -218,7 +269,7 @@ run().catch(console.dir);
 app.get("/", (req, res) => {
   res.send("Srever is running......!");
 });
-
+//App Port
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
